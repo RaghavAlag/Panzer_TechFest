@@ -8,6 +8,7 @@ function CompletionPage() {
   const navigate = useNavigate();
   const { user, leaderboard, discoveredBugs, hintsRemaining } = useGame();
   const [rank, setRank] = useState(null);
+  const [actionStatus, setActionStatus] = useState('');
   
   const totalTime = location.state?.totalTime || 0;
   
@@ -33,6 +34,37 @@ function CompletionPage() {
     if (r === 2) return '🥈';
     if (r === 3) return '🥉';
     return '🏅';
+  };
+
+  const buildSummaryText = () => {
+    const rankText = rank ? `${getRankEmoji(rank)} #${rank}` : 'Unranked';
+    return [
+      `Player: ${user?.displayName || 'Hacker'}`,
+      `Completion Time: ${formatTime(totalTime)}`,
+      `Rank: ${rankText}`,
+      `Bugs Discovered: ${discoveredBugs.length}`,
+      `Hints Remaining: ${hintsRemaining}/3`,
+    ].join('\n');
+  };
+
+  const copySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(buildSummaryText());
+      setActionStatus('Summary copied to clipboard.');
+    } catch {
+      setActionStatus('Clipboard permission unavailable.');
+    }
+  };
+
+  const exportSummary = () => {
+    const blob = new Blob([buildSummaryText()], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `debugquest-summary-${Date.now()}.txt`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    setActionStatus('Summary file downloaded.');
   };
   
   return (
@@ -153,6 +185,17 @@ function CompletionPage() {
             Play Again
           </button>
         </div>
+
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <button className="cyber-btn" onClick={copySummary}>Copy Summary</button>
+          <button className="cyber-btn cyber-btn--pink" onClick={exportSummary}>Export Stats</button>
+        </div>
+
+        {actionStatus && (
+          <p style={{ marginTop: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+            {actionStatus}
+          </p>
+        )}
       </div>
       
       {/* Progress dots */}

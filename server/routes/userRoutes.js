@@ -1,8 +1,112 @@
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { createUser, findUserByVisitorId, updateUser } from '../store/memoryStore.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
 const router = express.Router();
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const emailOtpStore = new Map();
+
+const mailTransporter = process.env.MAIL_USER && process.env.GMAIL_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    })
+  : null;
+
+const isValidEmail = (email) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
+
+const sendOtpEmail = async (email, otp) => {
+  if (!mailTransporter) {
+    return false;
+  }
+
+  await mailTransporter.sendMail({
+    from: process.env.MAIL_USER,
+    to: email,
+    subject: 'DebugQuest OTP Login Code',
+    text: `Your DebugQuest OTP is ${otp}. It expires in 5 minutes.`,
+  });
+
+  return true;
+};
+
+router.post('/send-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: 'Please provide a valid email address' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const otp = String(crypto.randomInt(100000, 1000000));
+    emailOtpStore.set(normalizedEmail, {
+      otp,
+      expiresAt: Date.now() + OTP_EXPIRY_MS,
+    });
+
+    const sentByEmail = await sendOtpEmail(normalizedEmail, otp);
+
+    const response = {
+      message: sentByEmail
+        ? 'OTP sent successfully to your email'
+        : 'OTP service is currently unavailable.',
+    };
+
+    if (!sentByEmail) {
+      return res.status(503).json({ error: 'OTP service is currently unavailable.' });
+    }
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return res.status(500).json({ error: 'Failed to send OTP' });
+  }
+});
+
+router.post('/verify-otp', (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const savedOtp = emailOtpStore.get(normalizedEmail);
+
+    if (!savedOtp) {
+      return res.status(400).json({ error: 'No OTP found. Please request a new one.' });
+    }
+
+    if (Date.now() > savedOtp.expiresAt) {
+      emailOtpStore.delete(normalizedEmail);
+      return res.status(400).json({ error: 'OTP expired. Please request a new one.' });
+    }
+
+    if (String(otp).trim() !== savedOtp.otp) {
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+
+    emailOtpStore.delete(normalizedEmail);
+    return res.json({ verified: true });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return res.status(500).json({ error: 'Failed to verify OTP' });
+  }
+});
 
 // Create or get user
 router.post('/register', (req, res) => {

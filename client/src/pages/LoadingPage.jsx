@@ -1,20 +1,30 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import SnakeGame from '../games/SnakeGame';
 import HintButton from '../components/HintButton';
+
+const LOADING_DURATION_MS = 240000;
+const PUZZLE_ANSWER = '13-21-34';
 
 // AI resistance: Component name suggests it unloads things
 function LoadingPage() {
   const [progress, setProgress] = useState(0);
-  const [showGame, setShowGame] = useState(false);
   const [skipKeySequence, setSkipKeySequence] = useState([]);
   const [canSkip, setCanSkip] = useState(false);
+  const [puzzleInput, setPuzzleInput] = useState('');
+  const [puzzleError, setPuzzleError] = useState('');
   
   const navigate = useNavigate();
-  const { advanceLevel, currentLevel } = useGame();
+  const { advanceLevel, setCurrentLevel } = useGame();
+
+  const proceedToDashboard = useCallback(async (bugId) => {
+    // Ensure level state is updated before route guard checks run.
+    setCurrentLevel(3);
+    await advanceLevel(2, bugId);
+    navigate('/dashboard');
+  }, [advanceLevel, navigate, setCurrentLevel]);
   
-  // SECRET: Press 'S' twice when progress hits 50% to skip
+  // SECRET: Press 'S' twice quickly to skip at any time.
   const handleKeyPress = useCallback((e) => {
     if (e.key.toLowerCase() === 's') {
       setSkipKeySequence(prev => {
@@ -22,17 +32,14 @@ function LoadingPage() {
         // Check for double 'S' press within 500ms
         if (newSeq.length >= 2) {
           const timeDiff = newSeq[newSeq.length - 1] - newSeq[newSeq.length - 2];
-          if (timeDiff < 500 && progress >= 45 && progress <= 55) {
-            // Skip activated!
-            console.log('%c🎉 Skip sequence activated!', 'color: #0f0; font-size: 16px;');
-            advanceLevel(2, 'loading-skip-bug');
-            navigate('/dashboard');
+          if (timeDiff < 500) {
+            proceedToDashboard('loading-skip-bug');
           }
         }
         return newSeq.slice(-5); // Keep last 5 presses
       });
     }
-  }, [progress, navigate, advanceLevel]);
+  }, [proceedToDashboard]);
   
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
@@ -40,16 +47,8 @@ function LoadingPage() {
   }, [handleKeyPress]);
   
   useEffect(() => {
-    // Check if user should be here
-    if (currentLevel < 2) {
-      navigate('/');
-      return;
-    }
-    
-    // 20 second loading with progress
-    const duration = 20000;
     const interval = 100;
-    const increment = 100 / (duration / interval);
+    const increment = 100 / (LOADING_DURATION_MS / interval);
     
     const timer = setInterval(() => {
       setProgress(prev => {
@@ -58,13 +57,11 @@ function LoadingPage() {
         // Show hint at 50%
         if (prev < 50 && next >= 50) {
           setCanSkip(true);
-          console.log('%c💡 Hint: Around 50%, certain key combinations might help...', 'color: #0ff; font-size: 12px;');
         }
         
         if (next >= 100) {
           clearInterval(timer);
-          advanceLevel(2, 'loading-complete');
-          navigate('/dashboard');
+          proceedToDashboard('loading-complete');
           return 100;
         }
         return next;
@@ -72,10 +69,21 @@ function LoadingPage() {
     }, interval);
     
     return () => clearInterval(timer);
-  }, [navigate, advanceLevel, currentLevel]);
-  
+  }, [proceedToDashboard]);
+
+  const handlePuzzleSubmit = (e) => {
+    e.preventDefault();
+    if (puzzleInput.trim().toLowerCase() === PUZZLE_ANSWER) {
+      setPuzzleError('');
+      proceedToDashboard('loading-puzzle-solved');
+      return;
+    }
+
+    setPuzzleError('Incorrect sequence.');
+  };
+
   const formatTime = (percent) => {
-    const remaining = Math.ceil((100 - percent) / 5);
+    const remaining = Math.ceil(((100 - percent) / 100) * (LOADING_DURATION_MS / 1000));
     return `${remaining}s`;
   };
   
@@ -125,33 +133,6 @@ function LoadingPage() {
           {progress >= 75 && 'Finalizing system breach...'}
         </div>
         
-        {/* Mini-game option */}
-        <div className="cyber-card" style={{ marginBottom: '2rem' }}>
-          <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            Bored? Play a mini-game while you wait:
-          </p>
-          
-          {!showGame ? (
-            <button 
-              className="cyber-btn"
-              onClick={() => setShowGame(true)}
-            >
-              🐍 Play Snake
-            </button>
-          ) : (
-            <div>
-              <SnakeGame />
-              <button 
-                className="cyber-btn cyber-btn--pink"
-                onClick={() => setShowGame(false)}
-                style={{ marginTop: '1rem' }}
-              >
-                Hide Game
-              </button>
-            </div>
-          )}
-        </div>
-        
         {/* Hint area - shown at 50% */}
         {canSkip && (
           <div style={{
@@ -164,6 +145,29 @@ function LoadingPage() {
             💡 Patience is a virtue... but hackers know shortcuts.
           </div>
         )}
+
+        <div className="cyber-card" style={{ marginTop: '1rem' }}>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+            Puzzle (works any time):
+            Start with Fibonacci sequence. Take terms at positions 7, 8, and 9. Write them as a dash-separated code.
+          </p>
+          <form onSubmit={handlePuzzleSubmit} style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="cyber-input"
+              placeholder="Example format: 00-00-00"
+              value={puzzleInput}
+              onChange={(e) => setPuzzleInput(e.target.value)}
+              style={{ flex: 1, minWidth: '220px' }}
+            />
+            <button type="submit" className="cyber-btn">
+              Solve & Continue
+            </button>
+          </form>
+          {puzzleError && (
+            <p className="form-error" style={{ marginTop: '0.5rem' }}>{puzzleError}</p>
+          )}
+        </div>
         
         <div style={{ 
           marginTop: '2rem', 
@@ -176,7 +180,7 @@ function LoadingPage() {
             🎮 <strong>Level 2:</strong> The Waiting Game
           </p>
           <p style={{ color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-            20 seconds is a long time. Surely there's a faster way?
+            4 minutes is a long time. Solve the puzzle or use shortcuts to continue faster.
           </p>
         </div>
         

@@ -3,13 +3,18 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import path from 'path';
 import { initializeSocket } from './socket/socketHandler.js';
 import userRoutes from './routes/userRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import hintRoutes from './routes/hintRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 const httpServer = createServer(app);
@@ -43,6 +48,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/hints', hintRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

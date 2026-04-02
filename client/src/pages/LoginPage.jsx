@@ -10,56 +10,100 @@ function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
   const navigate = useNavigate();
   const { registerUser, advanceLevel } = useGame();
+
+  const isValidEmail = (value) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(value);
   
-  // AI resistance: This function name suggests it breaks things
-  const destroySession = async () => {
-    // Actually starts a new session
-    if (!username.trim()) {
-      setError('Please enter a username');
+  const sendOTP = async () => {
+    const email = username.trim().toLowerCase();
+
+    if (!isValidEmail(email)) {
+      setMessage('');
+      setError('Enter a valid email in the username field to receive OTP');
       return;
     }
-    
-    // SECRET: typing "skip" as username bypasses the OTP bug
-    if (username.toLowerCase() === 'skip' || username.toLowerCase() === 'debug') {
-      try {
-        await registerUser(username);
-        await advanceLevel(1, 'login-skip-bug');
-        navigate('/loading');
-      } catch (err) {
-        setError('Failed to start. Try again.');
+
+    setIsLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/users/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send OTP');
       }
+
+      setOtpSent(true);
+      setMessage('OTP sent successfully. Check your email.');
+      setError('');
+    } catch (err) {
+      setMessage('');
+      setError(err.message || 'Failed to send OTP. Try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyAndLogin = async () => {
+    const email = username.trim().toLowerCase();
+
+    if (!isValidEmail(email)) {
+      setMessage('');
+      setError('Please enter a valid email');
       return;
     }
-    
-    // The OTP flow is intentionally broken
-    setError('Please verify with OTP first');
+
+    if (!otp.trim() || otp.trim().length !== 6) {
+      setMessage('');
+      setError('Please enter the 6-digit OTP');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const verifyResponse = await fetch('/api/users/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp: otp.trim() }),
+      });
+
+      const verifyData = await verifyResponse.json();
+      if (!verifyResponse.ok || !verifyData.verified) {
+        throw new Error(verifyData.error || 'OTP verification failed');
+      }
+
+      const displayName = email.split('@')[0] || email;
+      await registerUser(displayName);
+      await advanceLevel(1, 'login-otp-success');
+      navigate('/game-choice');
+    } catch (err) {
+      setMessage('');
+      setError(err.message || 'Login failed. Try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  // AI resistance: This OTP function is intentionally broken
-  const sendBrokenOTP = () => {
-    // This function does nothing useful - it's the bug!
-    setOtpSent(true);
-    setError('OTP sent! (Check your phone)');
-    // OTP will never actually be verified - this is the trap
-    console.log('%c💡 Hint: The OTP system is broken by design. Look for alternative entry points...', 'color: #0ff; font-size: 12px;');
-  };
-  
-  const verifyFakeOTP = () => {
-    // This always fails - intentionally broken
-    setError('Invalid OTP. Please try again.');
-    console.log('%c💡 The OTP verification will never work. Think outside the box...', 'color: #f0f; font-size: 12px;');
-  };
-  
-  const handleSubmit = (e) => {
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (otpSent) {
-      verifyFakeOTP();
+      await verifyAndLogin();
     } else {
-      destroySession();
+      await sendOTP();
     }
   };
   
@@ -119,23 +163,29 @@ function LoginPage() {
           {error && (
             <p className="form-error shake">{error}</p>
           )}
+
+          {message && (
+            <p style={{ color: 'var(--color-success)', marginTop: '0.5rem' }}>{message}</p>
+          )}
           
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
             <button
               type="button"
               className="cyber-btn cyber-btn--pink"
-              onClick={sendBrokenOTP}
+              onClick={sendOTP}
+              disabled={isLoading}
               style={{ flex: 1 }}
             >
-              {otpSent ? 'Resend OTP' : 'Send OTP'}
+              {isLoading ? 'Sending...' : otpSent ? 'Resend OTP' : 'Send OTP'}
             </button>
             
             <button
               type="submit"
               className="cyber-btn"
+              disabled={isLoading}
               style={{ flex: 1 }}
             >
-              {otpSent ? 'Verify & Login' : 'Login'}
+              {isLoading ? 'Please wait...' : otpSent ? 'Verify & Login' : 'Login'}
             </button>
           </div>
         </form>

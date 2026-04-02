@@ -12,8 +12,8 @@ const hintsData = {
   ],
   2: [
     { id: 'l2-h1', text: 'The loading screen might have a hidden escape route.', cost: 1 },
-    { id: 'l2-h2', text: 'Press the right key combination: look at the percentage.', cost: 1 },
-    { id: 'l2-h3', text: 'When you see 50%, try pressing "S" key twice.', cost: 1 },
+    { id: 'l2-h2', text: 'There is a keyboard shortcut if you react quickly.', cost: 1 },
+    { id: 'l2-h3', text: 'Try pressing "S" key twice quickly.', cost: 1 },
   ],
   3: [
     { id: 'l3-h1', text: 'The toggle might need a different approach than clicking.', cost: 1 },
@@ -21,9 +21,9 @@ const hintsData = {
     { id: 'l3-h3', text: 'The chat system responds to "debug mode" command.', cost: 1 },
   ],
   4: [
-    { id: 'l4-h1', text: 'The navigation link is hidden in plain sight.', cost: 1 },
-    { id: 'l4-h2', text: 'Look at the console for clues about the button.', cost: 1 },
-    { id: 'l4-h3', text: 'The moving button can be caught with Tab key.', cost: 1 },
+    { id: 'l4-h1', text: 'Some controls change behavior with alternate interactions on labels.', cost: 1 },
+    { id: 'l4-h2', text: 'Date, phone, and email rules are not aligned by default.', cost: 1 },
+    { id: 'l4-h3', text: 'When the form stabilizes, submission and mail both succeed.', cost: 1 },
   ],
   5: [
     { id: 'l5-h1', text: 'Phone numbers have an unusual behavior here.', cost: 1 },
