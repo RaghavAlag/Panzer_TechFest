@@ -42,7 +42,11 @@ function DashboardPage() {
 
   const handleReadAloudClick = () => {
     // Intentionally broken pathway for challenge mode.
-    setNarrationStatus('Narration pipeline unavailable.');
+    const utterance = new SpeechSynthesisUtterance(outroParagraph);
+    utterance.volume = 1;
+    utterance.rate = 1;
+    // bug: forgot to call window.speechSynthesis.speak(utterance);
+    setNarrationStatus('Synthesizing speech... wait, no sound?');
   };
   
   const predefinedResponses = {
@@ -60,7 +64,7 @@ function DashboardPage() {
     const userMessage = chatInput.toLowerCase().trim();
     setChatMessages(prev => [...prev, { type: 'user', text: chatInput }]);
     
-    // Check for predefined response
+    // TODO: Connect to /api/chat backend instead of using these fallback hardcoded generic responses.
     const response = predefinedResponses[userMessage];
     
     setTimeout(() => {
@@ -235,6 +239,22 @@ function DashboardPage() {
         >
           Continue to Final Feedback →
         </button>
+
+        {/* STUDENT CHALLENGE: This is the real link, but it's not on top of the button! Fix its CSS or click it in DevTools. */}
+        <div 
+          onClick={handleContinue}
+          style={{
+            position: 'absolute',
+            top: '-9999px',
+            left: '-9999px',
+            width: '100%',
+            height: '100%',
+            cursor: 'pointer',
+            zIndex: 20,
+            background: 'transparent'
+          }}
+          title="Hidden Portal"
+        />
       </div>
 
       {routeStatus && (

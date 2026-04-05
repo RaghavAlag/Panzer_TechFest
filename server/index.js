@@ -11,6 +11,7 @@ import progressRoutes from './routes/progressRoutes.js';
 import hintRoutes from './routes/hintRoutes.js';
 import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -49,6 +50,7 @@ app.use('/api/progress', progressRoutes);
 app.use('/api/hints', hintRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

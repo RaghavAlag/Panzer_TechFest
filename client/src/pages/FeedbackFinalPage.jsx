@@ -26,10 +26,16 @@ function FeedbackFinalPage() {
     if (currentLevel < 4) {
       navigate('/dashboard');
     }
+    console.log("HINT: The system memory is corrupted. Flaws report message field ONLY accepts binary [0, 1, space].");
   }, [currentLevel, navigate]);
 
   const updateField = (field, value) => {
-    setFormState(prev => ({ ...prev, [field]: value }));
+    let finalValue = value;
+    // CTF Bug: Team name is inverted
+    if (field === 'teamName') {
+      finalValue = value.split('').reverse().join('');
+    }
+    setFormState(prev => ({ ...prev, [field]: finalValue }));
   };
 
   const incrementPhone = () => {
@@ -62,7 +68,8 @@ function FeedbackFinalPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const emailUppercaseBlocked = /[A-Z]/.test(formState.email) && !emailRuleUnlocked;
+    // CTF BUG: Enforce strict "@Gmail" exact string
+    const emailUppercaseBlocked = !formState.email.endsWith('@Gmail');
     const dobIsPast = formState.dob && formState.dob < new Date().toISOString().split('T')[0];
     const dobBlocked = dobIsPast && !dobRuleUnlocked;
     const phoneLooksUnfixed = String(formState.phoneCounter).endsWith('2') || String(formState.phoneCounter).endsWith('4');
@@ -70,6 +77,12 @@ function FeedbackFinalPage() {
 
     if (!formState.teamName || !formState.email || !formState.dob || !formState.message.trim() || emailUppercaseBlocked || dobBlocked || phoneLooksUnfixed || !messageBinaryOnly) {
       setSubmitStatus('Submission blocked. Check behavior and retry.');
+      return;
+    }
+
+    // CTF BUG: Reversal trap on save!
+    if (formState.teamName !== formState.teamName.split('').reverse().join('')) {
+      setSubmitStatus('Security Check: Name string proxy invalid (must be a palindrome to save).');
       return;
     }
 

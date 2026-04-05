@@ -32,7 +32,7 @@ function LoginPage() {
     setMessage('');
 
     try {
-      const response = await fetch('/api/users/send-otp', {
+      const response = await fetch('/api/users/send-otpp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
