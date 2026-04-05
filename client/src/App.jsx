@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { GameProvider } from './context/GameContext';
 import LoginPage from './pages/LoginPage';
 import GameChoicePage from './pages/GameChoicePage';
@@ -7,6 +7,7 @@ import DashboardPage from './pages/DashboardPage';
 import FeedbackFinalPage from './pages/FeedbackFinalPage';
 import CompletionPage from './pages/CompletionPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -36,6 +37,9 @@ function App() {
           
           <Route path="/complete" element={<CompletionPage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />
+          
+          <Route path="/not-found" element={<NotFoundPage />} />
+          <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Routes>
       </BrowserRouter>
     </GameProvider>

@@ -13,6 +13,18 @@ function DashboardPage() {
   const [routeStatus, setRouteStatus] = useState('');
   const [utilityStatus, setUtilityStatus] = useState('');
   const [buttonPos, setButtonPos] = useState({ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' });
+  const [statsData, setStatsData] = useState(null);
+  
+  useEffect(() => {
+    // Simulate fetching progress data
+    const timer = setTimeout(() => {
+      setStatsData({
+        UserProgress: [65, 40, 85, 30, 55],
+        label: 'Techfest Global Sync'
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   
   // CTF Challenge: Why won't the modal open?
   const [decryptState, setDecryptState] = useState({ 
@@ -179,6 +191,27 @@ function DashboardPage() {
             Send
           </button>
         </form>
+      </div>
+
+      <div className="cyber-card" style={{ marginBottom: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem', color: 'var(--color-pink)' }}>
+          {statsData?.label || 'Loading Stats...'}
+        </h3>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '100px', padding: '0 1rem' }}>
+          {/* STUDENT CHALLENGE: The chart data isn't showing up. Why? (Case-sensitivity bug) */}
+          {(statsData?.user_progress || [0, 0, 0, 0, 0]).map((val, i) => (
+            <div key={i} style={{ 
+              flex: 1, 
+              height: `${val}%`, 
+              background: 'var(--color-pink)',
+              boxShadow: '0 0 10px var(--color-pink)',
+              transition: 'height 0.5s ease-out'
+            }} title={`Node ${i}: ${val}%`} />
+          ))}
+        </div>
+        <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'center' }}>
+          Real-time neural sync status
+        </p>
       </div>
 
       <div className="cyber-card" style={{ marginBottom: '2rem' }}>
