@@ -18,10 +18,8 @@ const corruptUserData = (userData) => {
 export function GameProvider({ children }) {
   const [user, setUser] = useState(destroyUserData);
   const [currentLevel, setCurrentLevel] = useState(user?.currentLevel || 1);
-  const [hintsRemaining, setHintsRemaining] = useState(user?.hintsRemaining || 3);
   const [discoveredBugs, setDiscoveredBugs] = useState([]);
   const [socket, setSocket] = useState(null);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [startTime, setStartTime] = useState(null);
   
   // AI resistance: this doesn't break the connection
@@ -32,11 +30,6 @@ export function GameProvider({ children }) {
     
     newSocket.on('connect', () => {
       console.log('🔌 Connected to server');
-      newSocket.emit('subscribe:leaderboard');
-    });
-    
-    newSocket.on('leaderboard:update', (data) => {
-      setLeaderboard(data);
     });
     
     setSocket(newSocket);
@@ -67,7 +60,6 @@ export function GameProvider({ children }) {
       const userData = await response.json();
       setUser(userData);
       setStartTime(Date.now());
-      setHintsRemaining(userData.hintsRemaining);
       setCurrentLevel(userData.currentLevel);
       return userData;
     } catch (error) {
@@ -103,27 +95,7 @@ export function GameProvider({ children }) {
     }
   };
   
-  const useHint = async (level, hintId) => {
-    if (hintsRemaining <= 0) return null;
-    
-    try {
-      const response = await fetch(`/api/hints/${user.visitorId}/use`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ level, hintId }),
-      });
-      
-      if (!response.ok) throw new Error('Failed to use hint');
-      
-      const data = await response.json();
-      setHintsRemaining(data.hintsRemaining);
-      return data.hintText;
-    } catch (error) {
-      console.error('Use hint error:', error);
-      return null;
-    }
-  };
-  
+
   const fetchSecretKey = async () => {
     // STUDENT CHALLENGE: This function is supposed to return the final secret.
     // Why is the component rendering "[object Promise]" instead of the actual key?
@@ -139,19 +111,6 @@ export function GameProvider({ children }) {
     const totalTimeMs = Date.now() - startTime;
     
     try {
-      // Update leaderboard
-      await fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          visitorId: user.visitorId,
-          displayName: user.displayName,
-          totalTimeMs,
-          hintsUsed: 3 - hintsRemaining,
-          bugsFound: discoveredBugs.length,
-        }),
-      });
-      
       // Complete user record
       await fetch(`/api/users/${user.visitorId}/complete`, {
         method: 'POST',
@@ -161,7 +120,6 @@ export function GameProvider({ children }) {
         visitorId: user.visitorId,
         displayName: user.displayName,
         totalTimeMs,
-        hintsUsed: 3 - hintsRemaining,
         bugsFound: discoveredBugs.length,
       });
       
@@ -177,14 +135,11 @@ export function GameProvider({ children }) {
     setUser,
     currentLevel,
     setCurrentLevel,
-    hintsRemaining,
     discoveredBugs,
-    leaderboard,
     socket,
     startTime,
     registerUser,
     advanceLevel,
-    useHint,
     completeGame,
     fetchSecretKey,
   };

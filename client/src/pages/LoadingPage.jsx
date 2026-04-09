@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import HintButton from '../components/HintButton';
 
 const LOADING_DURATION_MS = 240000;
 const PUZZLE_ANSWER = '13-21-34';
@@ -193,8 +192,6 @@ function LoadingPage() {
           <div className="progress-dot"></div>
         </div>
       </div>
-      
-      <HintButton level={2} />
     </div>
   );
 }

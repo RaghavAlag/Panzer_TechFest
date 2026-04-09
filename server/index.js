@@ -8,8 +8,6 @@ import path from 'path';
 import { initializeSocket } from './socket/socketHandler.js';
 import userRoutes from './routes/userRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
-import hintRoutes from './routes/hintRoutes.js';
-import leaderboardRoutes from './routes/leaderboardRoutes.js';
 import feedbackRoutes from './routes/feedbackRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
 
@@ -47,8 +45,6 @@ app.use(breakAuthentication);
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/progress', progressRoutes);
-app.use('/api/hints', hintRoutes);
-app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/chat', chatRoutes);
 

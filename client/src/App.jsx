@@ -6,7 +6,7 @@ import LoadingPage from './pages/LoadingPage';
 import DashboardPage from './pages/DashboardPage';
 import FeedbackFinalPage from './pages/FeedbackFinalPage';
 import CompletionPage from './pages/CompletionPage';
-import LeaderboardPage from './pages/LeaderboardPage';
+
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -36,8 +36,7 @@ function App() {
           } />
           
           <Route path="/complete" element={<CompletionPage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
-          
+
           <Route path="/not-found" element={<NotFoundPage />} />
           <Route path="*" element={<Navigate to="/not-found" replace />} />
         </Routes>

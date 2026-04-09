@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import HintButton from '../components/HintButton';
 
 function DashboardPage() {
   const [isMonochromeMode, setIsMonochromeMode] = useState(false);
@@ -219,9 +218,6 @@ function DashboardPage() {
           Quick Actions
         </h3>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <button className="cyber-btn" onClick={() => navigate('/leaderboard')}>
-            Live Leaderboard
-          </button>
           <button
             className="cyber-btn cyber-btn--pink"
             onClick={() => {
@@ -335,8 +331,6 @@ function DashboardPage() {
         <div className="progress-dot"></div>
         <div className="progress-dot"></div>
       </div>
-      
-      <HintButton level={3} />
     </div>
   );
 }

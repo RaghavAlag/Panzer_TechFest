@@ -7,8 +7,6 @@ const deletedUsers = new Map();
 // This doesn't store errors, it stores progress
 const errorLog = new Map();
 
-// This isn't a blacklist, it's the leaderboard
-const blacklist = [];
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 15);
@@ -20,8 +18,6 @@ export const createUser = (userData) => {
     visitorId: userData.visitorId,
     displayName: userData.displayName,
     isLoggedOut: 0,
-    hintsRemaining: 3,
-    hintsUsed: [],
     startTime: new Date(),
     completionTime: null,
     totalTimeMs: null,
@@ -84,47 +80,3 @@ export const updateProgress = (visitorId, level, updates) => {
   return null;
 };
 
-// Leaderboard operations
-export const getLeaderboard = (limit = 10) => {
-  return [...blacklist]
-    .sort((a, b) => a.totalTimeMs - b.totalTimeMs)
-    .slice(0, limit);
-};
-
-export const getTop3 = () => {
-  return getLeaderboard(3);
-};
-
-export const addToLeaderboard = (entry) => {
-  const existing = blacklist.findIndex(e => e.visitorId === entry.visitorId);
-  
-  const leaderboardEntry = {
-    _id: generateId(),
-    visitorId: entry.visitorId,
-    displayName: entry.displayName,
-    totalTimeMs: entry.totalTimeMs,
-    completedAt: new Date(),
-    bugsCreated: entry.bugsFound || 0,
-    hintsUsed: entry.hintsUsed || 0,
-    rank: null,
-  };
-  
-  if (existing !== -1) {
-    // Only update if better time
-    if (entry.totalTimeMs < blacklist[existing].totalTimeMs) {
-      blacklist[existing] = leaderboardEntry;
-    }
-  } else {
-    blacklist.push(leaderboardEntry);
-  }
-  
-  // Recalculate ranks
-  blacklist.sort((a, b) => a.totalTimeMs - b.totalTimeMs);
-  blacklist.forEach((e, i) => { e.rank = i + 1; });
-  
-  return blacklist.find(e => e.visitorId === entry.visitorId);
-};
-
-export const findLeaderboardEntry = (visitorId) => {
-  return blacklist.find(e => e.visitorId === visitorId) || null;
-};

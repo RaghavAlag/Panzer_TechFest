@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import HintButton from '../components/HintButton';
 
 function FeedbackFinalPage() {
   const navigate = useNavigate();
-  const { user, currentLevel, advanceLevel, completeGame, hintsRemaining, discoveredBugs, startTime } = useGame();
+  const { user, currentLevel, advanceLevel, completeGame, discoveredBugs, startTime } = useGame();
 
   const [submitStatus, setSubmitStatus] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,7 +121,6 @@ function FeedbackFinalPage() {
       teamName: formState.teamName,
       displayName: user?.displayName || 'Unknown',
       timeTakenMs: startTime ? Date.now() - startTime : 0,
-      hintsTaken: 3 - hintsRemaining,
       bugsFound: discoveredBugs.length,
       currentLevel,
     };
@@ -351,16 +349,6 @@ function FeedbackFinalPage() {
           </div>
         </form>
 
-        <div style={{
-          marginTop: '1.25rem',
-          padding: '0.9rem',
-          background: 'rgba(0, 255, 255, 0.05)',
-          borderLeft: '3px solid var(--color-delete)',
-          fontSize: '0.85rem',
-          color: 'var(--text-secondary)',
-        }}>
-          Hints are available if you get stuck.
-        </div>
 
         <div className="progress-dots" style={{ marginTop: '1.5rem' }}>
           <div className="progress-dot completed"></div>
@@ -370,8 +358,6 @@ function FeedbackFinalPage() {
           <div className="progress-dot"></div>
         </div>
       </div>
-
-      <HintButton level={4} />
     </div>
   );
 }

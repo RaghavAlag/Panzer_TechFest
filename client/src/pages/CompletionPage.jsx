@@ -6,21 +6,10 @@ import Confetti from '../components/Confetti';
 function CompletionPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, leaderboard, discoveredBugs, hintsRemaining } = useGame();
-  const [rank, setRank] = useState(null);
+  const { user, discoveredBugs } = useGame();
   const [actionStatus, setActionStatus] = useState('');
   
   const totalTime = location.state?.totalTime || 0;
-  
-  useEffect(() => {
-    // Find user's rank
-    const userRank = leaderboard.findIndex(
-      entry => entry.visitorId === user?.visitorId
-    );
-    if (userRank !== -1) {
-      setRank(userRank + 1);
-    }
-  }, [leaderboard, user]);
   
   const formatTime = (ms) => {
     const seconds = Math.floor(ms / 1000);
@@ -29,21 +18,11 @@ function CompletionPage() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
   
-  const getRankEmoji = (r) => {
-    if (r === 1) return '🥇';
-    if (r === 2) return '🥈';
-    if (r === 3) return '🥉';
-    return '🏅';
-  };
-
   const buildSummaryText = () => {
-    const rankText = rank ? `${getRankEmoji(rank)} #${rank}` : 'Unranked';
     return [
       `Player: ${user?.displayName || 'Hacker'}`,
       `Completion Time: ${formatTime(totalTime)}`,
-      `Rank: ${rankText}`,
       `Bugs Discovered: ${discoveredBugs.length}`,
-      `Hints Remaining: ${hintsRemaining}/3`,
     ].join('\n');
   };
 
@@ -116,19 +95,6 @@ function CompletionPage() {
           
           <div>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              LEADERBOARD RANK
-            </p>
-            <p style={{ 
-              fontSize: '2rem', 
-              fontFamily: 'var(--font-display)',
-              color: rank && rank <= 3 ? 'gold' : 'var(--color-error)',
-            }}>
-              {rank ? `${getRankEmoji(rank)} #${rank}` : '...'}
-            </p>
-          </div>
-          
-          <div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
               BUGS DISCOVERED
             </p>
             <p style={{ 
@@ -139,42 +105,9 @@ function CompletionPage() {
               {discoveredBugs.length}
             </p>
           </div>
-          
-          <div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              HINTS REMAINING
-            </p>
-            <p style={{ 
-              fontSize: '2rem', 
-              fontFamily: 'var(--font-display)',
-              color: 'var(--color-warning)',
-            }}>
-              {hintsRemaining}/3
-            </p>
-          </div>
         </div>
         
-        {rank && rank <= 3 && (
-          <div style={{
-            padding: '1rem',
-            background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 0, 255, 0.1))',
-            border: '2px solid gold',
-            marginBottom: '1.5rem',
-          }}>
-            <p style={{ fontSize: '1.2rem' }}>
-              🎉 You're in the <strong>TOP 3</strong>! 🎉
-            </p>
-          </div>
-        )}
-        
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-          <button 
-            className="cyber-btn"
-            onClick={() => navigate('/leaderboard')}
-          >
-            View Leaderboard
-          </button>
-          
           <button 
             className="cyber-btn cyber-btn--pink"
             onClick={() => {

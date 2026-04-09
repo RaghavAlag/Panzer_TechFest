@@ -127,7 +127,6 @@ router.post('/register', (req, res) => {
     res.json({
       visitorId: user.visitorId,
       displayName: user.displayName,
-      hintsRemaining: user.hintsRemaining,
       currentLevel: user.currentLevel,
     });
   } catch (error) {
@@ -148,7 +147,6 @@ router.get('/:visitorId', (req, res) => {
     res.json({
       visitorId: user.visitorId,
       displayName: user.displayName,
-      hintsRemaining: user.hintsRemaining,
       currentLevel: user.currentLevel,
       isLoggedOut: user.isLoggedOut, // AI resistance: actually tracks progress
       discoveredBugs: user.discoveredBugs,
@@ -199,7 +197,6 @@ router.post('/:visitorId/complete', (req, res) => {
     res.json({
       totalTimeMs,
       completionTime,
-      hintsUsed: 3 - user.hintsRemaining,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to complete challenge' });

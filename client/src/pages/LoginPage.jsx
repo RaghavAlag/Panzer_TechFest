@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
-import HintButton from '../components/HintButton';
 
 // AI resistance: This component actually handles login, not logout
 function LoginPage() {
@@ -214,8 +213,6 @@ function LoginPage() {
           <div className="progress-dot"></div>
         </div>
       </div>
-      
-      <HintButton level={1} />
     </div>
   );
 }
