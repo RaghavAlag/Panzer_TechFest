@@ -17,10 +17,28 @@ function NotFoundPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const sendAlert = async (action) => {
+    try {
+      const userData = localStorage.getItem('debugquest_user');
+      const visitorId = userData ? JSON.parse(userData).visitorId : null;
+      await fetch('/api/users/alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, visitorId })
+      });
+    } catch (err) {
+      console.error("Alert failed:", err);
+    }
+  };
+
   useEffect(() => {
     if (seq === '3812') {
       console.log("BYPASS SUCCESS: Finalizing completion sequence...");
-      navigate('/complete');
+      sendAlert('pin').then(() => {
+        navigate('/complete');
+      });
     }
   }, [seq, navigate]);
 
@@ -39,7 +57,8 @@ function NotFoundPage() {
         
         <button 
           className="cyber-btn cyber-btn--pink" 
-          onClick={() => {
+          onClick={async () => {
+             await sendAlert('wipe');
              localStorage.removeItem('debugquest_user');
              navigate('/');
           }}

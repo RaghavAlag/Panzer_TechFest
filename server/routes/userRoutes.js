@@ -203,4 +203,40 @@ router.post('/:visitorId/complete', (req, res) => {
   }
 });
 
+// Route to send alerts to the admin's email
+router.post('/alert', async (req, res) => {
+  try {
+    const { action, visitorId } = req.body;
+    
+    if (!mailTransporter) {
+      console.log('Alert Mail Not Sent: mailTransporter not configured correctly.');
+      return res.status(503).json({ error: 'Mail service unavailable.' });
+    }
+
+    const toEmail = process.env.FEEDBACK_TO || process.env.MAIL_USER || 'hargunmadan9034@gmail.com';
+    let userDetails = "Unknown User";
+    
+    if (visitorId) {
+      const user = findUserByVisitorId(visitorId);
+      if (user) {
+         userDetails = user.displayName;
+      }
+    }
+
+    const actionText = action === 'pin' ? 'entered the correct PIN (3812)' : 'wiped the system data';
+
+    await mailTransporter.sendMail({
+      from: process.env.MAIL_USER,
+      to: toEmail,
+      subject: `DebugQuest Alert: User ${actionText}`,
+      text: `User ${userDetails} (ID: ${visitorId || 'N/A'}) has ${actionText} on the 404 page.`,
+    });
+
+    return res.json({ success: true });
+  } catch (error) {
+    console.error('Send alert error:', error);
+    return res.status(500).json({ error: 'Failed to send alert' });
+  }
+});
+
 export default router;
