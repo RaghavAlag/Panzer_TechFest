@@ -20,7 +20,7 @@ function GameChoicePage() {
         </h1>
 
         <p className="cyber-subtitle" style={{ marginBottom: '1.5rem' }}>
-          You have to build a game by following the video guide.
+          You have to build a game by following the video guide. The game should be in between the login page and the next puzzle.
         </p>
 
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>

@@ -21,8 +21,7 @@ function CompletionPage() {
   const buildSummaryText = () => {
     return [
       `Player: ${user?.displayName || 'Hacker'}`,
-      `Completion Time: ${formatTime(totalTime)}`,
-      `Bugs Discovered: ${discoveredBugs.length}`,
+      `State: Completed DebugQuest!`,
     ].join('\n');
   };
 
@@ -66,45 +65,6 @@ function CompletionPage() {
       </p>
       
       <div className="cyber-card" style={{ maxWidth: '500px', width: '100%' }}>
-        <h2 style={{ 
-          color: 'var(--color-delete)', 
-          marginBottom: '1.5rem',
-          fontSize: '1.5rem',
-        }}>
-          Your Stats
-        </h2>
-        
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: '1fr 1fr',
-          gap: '1.5rem',
-          marginBottom: '1.5rem',
-        }}>
-          <div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              COMPLETION TIME
-            </p>
-            <p style={{ 
-              fontSize: '2rem', 
-              fontFamily: 'var(--font-display)',
-              color: 'var(--color-delete)',
-            }}>
-              {formatTime(totalTime)}
-            </p>
-          </div>
-          
-          <div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              BUGS DISCOVERED
-            </p>
-            <p style={{ 
-              fontSize: '2rem', 
-              fontFamily: 'var(--font-display)',
-              color: 'var(--color-broken)',
-            }}>
-              {discoveredBugs.length}
-            </p>
-          </div>
         </div>
         
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>

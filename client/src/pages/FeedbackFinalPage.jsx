@@ -28,7 +28,7 @@ function FeedbackFinalPage() {
     if (currentLevel < 4) {
       navigate('/dashboard');
     }
-    console.log("HINT: The system memory is corrupted. Flaws report message field ONLY accepts binary [0, 1, space].");
+    console.log("HINT: The system memory is corrupted. Flaws report message field ONLY accepts binary [0, 1, space]. Instruct us which bugs are solved and how.");
   }, [currentLevel, navigate]);
 
   const updateField = (field, value) => {
@@ -321,7 +321,7 @@ function FeedbackFinalPage() {
               value={formState.message}
               onChange={(e) => updateField('message', e.target.value)}
               rows={4}
-              placeholder="Final report"
+              placeholder="Tell us which bugs are solved and how"
             />
           </div>
 

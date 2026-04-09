@@ -3,8 +3,15 @@ import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
-// CTF CHALLENGE: Students should implement their own email sending logic using Nodemailer or similar.
-const mailTransporter = null;
+const mailTransporter = process.env.MAIL_USER && process.env.GMAIL_PASSWORD
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.GMAIL_PASSWORD,
+      },
+    })
+  : null;
 
 router.post('/send', async (req, res) => {
   try {
@@ -23,6 +30,7 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ error: 'Submission blocked' });
     }
 
+    // Binary message validation (CTF Challenge)
     const isBinaryMessage = typeof message === 'string' && /^[01\s]+$/.test(message.trim());
     if (!isBinaryMessage) {
       return res.status(400).json({ error: 'Submission blocked' });
@@ -31,12 +39,28 @@ router.post('/send', async (req, res) => {
     const toAddress = process.env.FEEDBACK_TO || 'hargunmadan9034@gmail.com';
 
     if (!mailTransporter) {
-      // TODO: Implement email sending logic here!
-      // return res.status(500).json({ error: 'Mail transport is not configured' });
       console.log('Submission received:', { email, teamName, message, stats });
-      console.log('CTF: Students must implement email dispatch to get points here.');
+      console.log('Mail transport is not configured');
     } else {
-       // Send mail logic here
+      const mailContent = `
+Feedback Received:
+
+Team Name: ${teamName}
+Email: ${email}
+Phone Counter: ${phoneCounter}
+DOB: ${dob}
+Favorite Bug: ${favoriteBug}
+Severity: ${severity}
+
+Message (Bugs solved and how):
+${message}
+      `;
+      await mailTransporter.sendMail({
+        from: process.env.MAIL_USER,
+        to: toAddress,
+        subject: 'DebugQuest Context Feedback Submission',
+        text: mailContent,
+      });
     }
 
     return res.json({ message: 'Feedback sent successfully (simulated)' });
