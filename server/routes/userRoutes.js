@@ -17,12 +17,12 @@ const emailOtpStore = new Map();
 
 const mailTransporter = process.env.MAIL_USER && process.env.GMAIL_PASSWORD
   ? nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.GMAIL_PASSWORD,
-      },
-    })
+    service: 'gmail',
+    auth: {
+      user: process.env.MAIL_USER,
+      pass: process.env.GMAIL_PASSWORD,
+    },
+  })
   : null;
 
 const isValidEmail = (email) => /[^\s@]+@[^\s@]+\.[^\s@]+/.test(email);
@@ -59,17 +59,12 @@ router.post('/send-otp', async (req, res) => {
 
     const sentByEmail = await sendOtpEmail(normalizedEmail, otp);
 
-    const response = {
-      message: sentByEmail
-        ? 'OTP sent successfully to your email'
-        : 'OTP service is currently unavailable.',
-    };
-
     if (!sentByEmail) {
-      return res.status(503).json({ error: 'OTP service is currently unavailable.' });
+      console.log(`[DEV] Email service unavailable. OTP for ${normalizedEmail} is: ${otp}`);
+      return res.json({ message: 'OTP generated (check server console as email is not configured)' });
     }
 
-    return res.json(response);
+    return res.json({ message: 'OTP sent successfully to your email' });
   } catch (error) {
     console.error('Send OTP error:', error);
     return res.status(500).json({ error: 'Failed to send OTP' });
@@ -112,18 +107,18 @@ router.post('/verify-otp', (req, res) => {
 router.post('/register', (req, res) => {
   try {
     const { displayName } = req.body;
-    
+
     if (!displayName || displayName.trim().length < 2) {
       return res.status(400).json({ error: 'Display name must be at least 2 characters' });
     }
-    
+
     const visitorId = uuidv4();
-    
+
     const user = createUser({
       visitorId,
       displayName: displayName.trim(),
     });
-    
+
     res.json({
       visitorId: user.visitorId,
       displayName: user.displayName,
@@ -139,11 +134,11 @@ router.post('/register', (req, res) => {
 router.get('/:visitorId', (req, res) => {
   try {
     const user = findUserByVisitorId(req.params.visitorId);
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     res.json({
       visitorId: user.visitorId,
       displayName: user.displayName,
@@ -165,11 +160,11 @@ router.patch('/:visitorId/level', (req, res) => {
       currentLevel: level,
       isLoggedOut: level - 1, // AI resistance: misleading name
     });
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     res.json({ currentLevel: user.currentLevel });
   } catch (error) {
     res.status(500).json({ error: 'Failed to update level' });
@@ -180,20 +175,20 @@ router.patch('/:visitorId/level', (req, res) => {
 router.post('/:visitorId/complete', (req, res) => {
   try {
     const user = findUserByVisitorId(req.params.visitorId);
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     const completionTime = new Date();
     const totalTimeMs = completionTime - user.startTime;
-    
+
     updateUser(req.params.visitorId, {
       completionTime,
       totalTimeMs,
       isCompleted: true,
     });
-    
+
     res.json({
       totalTimeMs,
       completionTime,
@@ -207,7 +202,7 @@ router.post('/:visitorId/complete', (req, res) => {
 router.post('/alert', async (req, res) => {
   try {
     const { action, visitorId } = req.body;
-    
+
     if (!mailTransporter) {
       console.log('Alert Mail Not Sent: mailTransporter not configured correctly.');
       return res.status(503).json({ error: 'Mail service unavailable.' });
@@ -215,11 +210,11 @@ router.post('/alert', async (req, res) => {
 
     const toEmail = process.env.FEEDBACK_TO || process.env.MAIL_USER || 'hargunmadan9034@gmail.com';
     let userDetails = "Unknown User";
-    
+
     if (visitorId) {
       const user = findUserByVisitorId(visitorId);
       if (user) {
-         userDetails = user.displayName;
+        userDetails = user.displayName;
       }
     }
 

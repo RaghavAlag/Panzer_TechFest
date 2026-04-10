@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 
@@ -28,16 +28,10 @@ function FeedbackFinalPage() {
     if (currentLevel < 4) {
       navigate('/dashboard');
     }
-    console.log("HINT: The system memory is corrupted. Flaws report message field ONLY accepts binary [0, 1, space]. Instruct us which bugs are solved and how.");
   }, [currentLevel, navigate]);
 
   const updateField = (field, value) => {
-    let finalValue = value;
-    // CTF Bug: Team name is inverted
-    if (field === 'teamName') {
-      finalValue = value.split('').reverse().join('');
-    }
-    setFormState(prev => ({ ...prev, [field]: finalValue }));
+    setFormState(prev => ({ ...prev, [field]: value }));
   };
 
   const incrementPhone = () => {
@@ -67,34 +61,35 @@ function FeedbackFinalPage() {
     setSubmitStatus('Date control switched mode.');
   };
 
-  const startSilkBoardUpload = () => {
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
     setIsUploading(true);
     setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress(prev => {
-        const next = prev + Math.random() * 15;
-        // STUDENT CHALLENGE: The progress bar is stuck at 99%! (Silk Board Ceiling)
-        if (next >= 99) {
-          clearInterval(interval);
-          return 99; 
-        }
-        return next;
-      });
-    }, 400);
+
+    let current = 0;
+    const tick = () => {
+      current += Math.random() * 25;
+      if (current >= 100) {
+        setUploadProgress(100);
+        setIsUploading(false);
+      } else {
+        setUploadProgress(current);
+        setTimeout(tick, 200);
+      }
+    };
+    setTimeout(tick, 200);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // CTF BUG: Enforce strict "@Gmail" exact string
-    const emailUppercaseBlocked = !formState.email.endsWith('@Gmail');
-    const dobIsPast = formState.dob && formState.dob < new Date().toISOString().split('T')[0];
-    const dobBlocked = dobIsPast && !dobRuleUnlocked;
-    const phoneLooksUnfixed = String(formState.phoneCounter).endsWith('2') || String(formState.phoneCounter).endsWith('4');
-    const messageBinaryOnly = /^[01\s]+$/.test(formState.message.trim());
-
-    if (!formState.teamName || !formState.email || !formState.dob || !formState.message.trim() || emailUppercaseBlocked || dobBlocked || phoneLooksUnfixed || !messageBinaryOnly) {
-      setSubmitStatus('Submission blocked. Check behavior and retry.');
+    if (!formState.teamName || !formState.email || !formState.dob || !formState.message.trim()) {
+      setSubmitStatus('Submission blocked: All fields are required.');
       return;
     }
 
@@ -110,12 +105,6 @@ function FeedbackFinalPage() {
       return;
     }
 
-    // CTF BUG: Reversal trap on save!
-    // STUDENT CHALLENGE: Even after fixing the mirror CSS, the save still fails. Why?
-    if (formState.teamName !== formState.teamName.split('').reverse().join('')) {
-      setSubmitStatus('Security Check: Name string proxy invalid (must be a palindrome to save).');
-      return;
-    }
 
     const stats = {
       teamName: formState.teamName,
@@ -173,7 +162,6 @@ function FeedbackFinalPage() {
               value={formState.teamName}
               onChange={(e) => updateField('teamName', e.target.value)}
               placeholder="Team identifier"
-              style={{ unicodeBidi: 'bidi-override', direction: 'rtl' }}
             />
           </div>
 
@@ -181,14 +169,22 @@ function FeedbackFinalPage() {
           <div className="form-group">
             <label className="form-label">Verify Profile Identity</label>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden-file-input" 
+                style={{ display: 'none' }} 
+                accept="image/*,.pdf,.doc,.docx"
+              />
               <button 
                 type="button" 
                 className="cyber-btn cyber-btn--pink" 
-                onClick={startSilkBoardUpload}
-                disabled={isUploading}
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading || uploadProgress === 100}
                 style={{ fontSize: '0.75rem' }}
               >
-                {uploadProgress > 0 ? 'Syncing...' : 'Upload Avatar'}
+                {uploadProgress === 100 ? 'Uploaded ✅' : isUploading ? 'Syncing...' : 'Upload Avatar'}
               </button>
               <div style={{ flex: 1, height: '10px', background: 'rgba(255,255,255,0.1)', borderRadius: '5px', overflow: 'hidden' }}>
                 <div style={{ 
@@ -212,7 +208,6 @@ function FeedbackFinalPage() {
           <div className="form-group">
             <label className="form-label">System Privileges</label>
             <div 
-              onClick={() => setIsAdmin(false)} 
               style={{ 
                 position: 'relative', 
                 padding: '0.5rem', 
@@ -251,8 +246,11 @@ function FeedbackFinalPage() {
               <input
                 type="text"
                 className="cyber-input"
-                value={String(formState.phoneCounter).padStart(10, '0')}
-                readOnly
+                value={formState.phoneCounter}
+                onChange={(e) => {
+                  const numStr = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  updateField('phoneCounter', numStr);
+                }}
                 style={{ textAlign: 'center' }}
               />
               <button type="button" className="cyber-btn" onClick={incrementPhone}>+</button>
@@ -281,7 +279,6 @@ function FeedbackFinalPage() {
               className="cyber-input"
               value={formState.dob}
               onChange={(e) => updateField('dob', e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
             />
           </div>
 
@@ -328,22 +325,7 @@ function FeedbackFinalPage() {
           {submitStatus && <p style={{ color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>{submitStatus}</p>}
 
           <div style={{ position: 'relative' }}>
-            {/* STUDENT CHALLENGE: Why can't I click the submit button? (Z-Index Trap) */}
-            <div 
-              style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0, bottom: 0,
-                zIndex: 9999,
-                cursor: 'not-allowed',
-                opacity: 0 // Invisible trap!
-              }} 
-              title="System Error: Button Blocked"
-              onClick={(e) => {
-                e.preventDefault();
-                setSubmitStatus("ERR_BLOCKED: An invisible force prevents submission.");
-              }}
-            />
-            <button type="submit" className="cyber-btn" style={{ width: '100%', position: 'relative', zIndex: 1 }} disabled={isSubmitting}>
+            <button type="submit" className="cyber-btn" style={{ width: '100%', position: 'relative' }} disabled={isSubmitting}>
               {isSubmitting ? 'Submitting...' : 'Submit Final Feedback'}
             </button>
           </div>

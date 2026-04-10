@@ -33,11 +33,6 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ error: 'Submission blocked' });
     }
 
-    // Binary message validation (CTF Challenge)
-    const isBinaryMessage = typeof message === 'string' && /^[01\s]+$/.test(message.trim());
-    if (!isBinaryMessage) {
-      return res.status(400).json({ error: 'Submission blocked' });
-    }
 
     if (!mailTransporter) {
       console.error('Mail transport is not configured');
