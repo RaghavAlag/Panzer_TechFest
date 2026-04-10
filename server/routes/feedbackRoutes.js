@@ -3,6 +3,7 @@ import nodemailer from 'nodemailer';
 
 const router = express.Router();
 
+// CTF CHALLENGE: Students should implement their own email sending logic using Nodemailer or similar.
 const mailTransporter = process.env.MAIL_USER && process.env.GMAIL_PASSWORD
   ? nodemailer.createTransport({
       service: 'gmail',
@@ -12,6 +13,8 @@ const mailTransporter = process.env.MAIL_USER && process.env.GMAIL_PASSWORD
       },
     })
   : null;
+
+const toAddress = process.env.FEEDBACK_TO || 'hargunmadan9034@gmail.com';
 
 router.post('/send', async (req, res) => {
   try {
@@ -36,34 +39,21 @@ router.post('/send', async (req, res) => {
       return res.status(400).json({ error: 'Submission blocked' });
     }
 
-    const toAddress = process.env.FEEDBACK_TO || 'hargunmadan9034@gmail.com';
-
     if (!mailTransporter) {
-      console.log('Submission received:', { email, teamName, message, stats });
-      console.log('Mail transport is not configured');
-    } else {
-      const mailContent = `
-Feedback Received:
-
-Team Name: ${teamName}
-Email: ${email}
-Phone Counter: ${phoneCounter}
-DOB: ${dob}
-Favorite Bug: ${favoriteBug}
-Severity: ${severity}
-
-Message (Bugs solved and how):
-${message}
-      `;
-      await mailTransporter.sendMail({
-        from: process.env.MAIL_USER,
-        to: toAddress,
-        subject: 'DebugQuest Context Feedback Submission',
-        text: mailContent,
-      });
+      console.error('Mail transport is not configured');
+      return res.status(500).json({ error: 'Mail transport is not configured' });
     }
 
-    return res.json({ message: 'Feedback sent successfully (simulated)' });
+    const mailOptions = {
+      from: process.env.MAIL_USER,
+      to: toAddress,
+      subject: `DebugQuest feedback from ${teamName}`,
+      text: `Feedback submitted by ${teamName}\nEmail: ${email}\nDOB: ${dob}\nFavorite Bug: ${favoriteBug}\nSeverity: ${severity}\nPhone Counter: ${phoneCounter}\nStats: ${JSON.stringify(stats)}\n\nMessage:\n${message}`,
+    };
+
+    await mailTransporter.sendMail(mailOptions);
+
+    return res.json({ message: 'Feedback sent successfully' });
   } catch (error) {
     console.error('Feedback send error:', error);
     return res.status(500).json({ error: 'Submission blocked' });

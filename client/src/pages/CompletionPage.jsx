@@ -1,27 +1,37 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import Confetti from '../components/Confetti';
 
 function CompletionPage() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { user, discoveredBugs } = useGame();
+  const { user, leaderboard, hintsRemaining } = useGame();
+  const [rank, setRank] = useState(null);
   const [actionStatus, setActionStatus] = useState('');
+
+  useEffect(() => {
+    // Find user's rank
+    const userRank = leaderboard.findIndex(
+      entry => entry.visitorId === user?.visitorId
+    );
+    if (userRank !== -1) {
+      setRank(userRank + 1);
+    }
+  }, [leaderboard, user]);
   
-  const totalTime = location.state?.totalTime || 0;
-  
-  const formatTime = (ms) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const getRankEmoji = (r) => {
+    if (r === 1) return '🥇';
+    if (r === 2) return '🥈';
+    if (r === 3) return '🥉';
+    return '🏅';
   };
-  
+
   const buildSummaryText = () => {
+    const rankText = rank ? `${getRankEmoji(rank)} #${rank}` : 'Unranked';
     return [
       `Player: ${user?.displayName || 'Hacker'}`,
-      `State: Completed DebugQuest!`,
+      `Rank: ${rankText}`,
+      `Hints Remaining: ${hintsRemaining}/3`,
     ].join('\n');
   };
 
@@ -65,9 +75,68 @@ function CompletionPage() {
       </p>
       
       <div className="cyber-card" style={{ maxWidth: '500px', width: '100%' }}>
+        <h2 style={{ 
+          color: 'var(--color-delete)', 
+          marginBottom: '1.5rem',
+          fontSize: '1.5rem',
+        }}>
+          Your Stats
+        </h2>
+        
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: '1fr 1fr',
+          gap: '1.5rem',
+          marginBottom: '1.5rem',
+        }}>
+          <div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              LEADERBOARD RANK
+            </p>
+            <p style={{ 
+              fontSize: '2rem', 
+              fontFamily: 'var(--font-display)',
+              color: rank && rank <= 3 ? 'gold' : 'var(--color-error)',
+            }}>
+              {rank ? `${getRankEmoji(rank)} #${rank}` : '...'}
+            </p>
+          </div>
+          
+          <div>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+              HINTS REMAINING
+            </p>
+            <p style={{ 
+              fontSize: '2rem', 
+              fontFamily: 'var(--font-display)',
+              color: 'var(--color-warning)',
+            }}>
+              {hintsRemaining}/3
+            </p>
+          </div>
         </div>
+
+        {rank && rank <= 3 && (
+          <div style={{
+            padding: '1rem',
+            background: 'linear-gradient(90deg, rgba(255, 215, 0, 0.1), rgba(255, 0, 255, 0.1))',
+            border: '2px solid gold',
+            marginBottom: '1.5rem',
+          }}>
+            <p style={{ fontSize: '1.2rem' }}>
+              🎉 You're in the <strong>TOP 3</strong>! 🎉
+            </p>
+          </div>
+        )}
         
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <button 
+            className="cyber-btn"
+            onClick={() => navigate('/leaderboard')}
+          >
+            View Leaderboard
+          </button>
+
           <button 
             className="cyber-btn cyber-btn--pink"
             onClick={() => {

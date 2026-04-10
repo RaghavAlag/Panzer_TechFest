@@ -19,7 +19,7 @@ function DashboardPage() {
     const timer = setTimeout(() => {
       setStatsData({
         UserProgress: [65, 40, 85, 30, 55],
-        label: 'Techfest Global Sync'
+        label: 'System Status'
       });
     }, 1000);
     return () => clearTimeout(timer);
@@ -194,11 +194,10 @@ function DashboardPage() {
 
       <div className="cyber-card" style={{ marginBottom: '2rem' }}>
         <h3 style={{ marginBottom: '1rem', color: 'var(--color-pink)' }}>
-          {statsData?.label || 'Loading Stats...'}
+          {statsData?.label || 'Loading status...'}
         </h3>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', height: '100px', padding: '0 1rem' }}>
-          {/* STUDENT CHALLENGE: The chart data isn't showing up. Why? (Case-sensitivity bug) */}
-          {(statsData?.user_progress || [0, 0, 0, 0, 0]).map((val, i) => (
+          {(statsData?.UserProgress || [0, 0, 0, 0, 0]).map((val, i) => (
             <div key={i} style={{ 
               flex: 1, 
               height: `${val}%`, 
@@ -209,7 +208,7 @@ function DashboardPage() {
           ))}
         </div>
         <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '1rem', textAlign: 'center' }}>
-          Real-time neural sync status
+          Current node health
         </p>
       </div>
 
